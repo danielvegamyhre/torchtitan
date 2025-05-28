@@ -56,18 +56,25 @@ class TransformerModelArgs(BaseModelArgs):
     # token-choice
     top_k: int = 1
     use_grouped_mm: bool = True  # grouped mm or for-loop for the experts computation
+    float8_rowwise_for_moe: bool = False
     load_balance_coeff: float | None = 1e-3
 
     def update_from_config(self, job_config: JobConfig, tokenizer: Tokenizer) -> None:
         self.vocab_size = tokenizer.n_words
         self.max_seq_len = job_config.training.seq_len
         self.eos_id = tokenizer.eos_id
+        self.float8_rowwise_for_moe = job_config.float8.float8_rowwise_for_moe
 
         if self.use_grouped_mm and not has_cuda_capability(9, 0):
             logger.warning(
                 "Failed to use grouped mm, which is only supported on SM90 or later",
             )
             self.use_grouped_mm = False
+
+        if self.float8_rowwise_for_moe and not self.use_grouped_mm:
+            raise ValueError(
+                "float8_rowwise_for_moe is only supported with grouped_mm"
+            )
 
         if job_config.activation_checkpoint.mode == "selective" and self.use_flex_attn:
             raise ValueError(

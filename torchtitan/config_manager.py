@@ -450,6 +450,11 @@ class Float8:
     Example: --float8.filter_fqns "attention.wq,attention.wk,attention.wv,output"
     """
 
+    float8_rowwise_for_moe: bool = False
+    """
+    If true, use float8 rowwise training for expert weights in MoE layers.
+    """
+
 
 @dataclass
 class Comm:

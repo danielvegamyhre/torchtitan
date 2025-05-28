@@ -145,7 +145,7 @@ class Trainer(torch.distributed.checkpoint.stateful.Stateful):
 
         # Build the collection of model converters. No-op if `model.converters` empty
         model_converters = build_model_converters(job_config, parallel_dims)
-        model_converters.convert(model)
+        model_converters.convert(model.to(torch.bfloat16))
 
         # metrics logging
         build_metrics_processor_fn = (
