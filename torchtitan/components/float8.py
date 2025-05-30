@@ -54,6 +54,7 @@ class Float8Converter(ModelConverter):
 
         self.enabled = True
         self.filter_fqns = self.float8_config.filter_fqns
+        self.moe_fqns = self.float8_config.moe_fqns
 
         if self.float8_config.recipe_name is not None:
             assert (
@@ -119,11 +120,19 @@ class Float8Converter(ModelConverter):
             "Swapped to Float8Linear layers with enable_fsdp_float8_all_gather="
             f"{self.config.enable_fsdp_float8_all_gather}"
         )
-        if self.float8_config.float8_rowwise_for_moe:
-            from torchao.prototype.scaled_grouped_mm.jagged_float8_utils import (
+
+        if self.moe_fqns:
+            from torchao.prototype.scaled_grouped_mm.conversion_utils import (
                 convert_moe_to_float8_training,
             )
-            convert_moe_to_float8_training(model)
+
+            def moe_module_filter_fn(mod: nn.Module, cur_fqn: str) -> bool:
+                for target_fqn in self.moe_fqns:
+                    if target_fqn in cur_fqn:
+                        return True
+                return False
+
+            convert_moe_to_float8_training(model, module_filter_fn=moe_module_filter_fn)
             logger.info("Converted MoE to float8")
 
     def _module_filter_fn(self, mod: nn.Module, fqn: str) -> bool:

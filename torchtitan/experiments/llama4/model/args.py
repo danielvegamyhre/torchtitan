@@ -63,7 +63,6 @@ class TransformerModelArgs(BaseModelArgs):
         self.vocab_size = tokenizer.n_words
         self.max_seq_len = job_config.training.seq_len
         self.eos_id = tokenizer.eos_id
-        self.float8_rowwise_for_moe = job_config.float8.float8_rowwise_for_moe
 
         if self.use_grouped_mm and not has_cuda_capability(9, 0):
             logger.warning(
