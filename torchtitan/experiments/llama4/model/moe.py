@@ -82,6 +82,12 @@ class GroupedExperts(nn.Module):
         assert (
             x.dtype == self.w1.dtype == self.w2.dtype == self.w3.dtype == torch.bfloat16
         ), "torch._grouped_mm only supports bf16 dtypes"
+
+        # print(f"X dtype: {x.dtype}")
+        # print(f"W1 dtype: {self.w1.dtype}")
+        # print(f"W1 type: {type(self.w1)}")
+        # print(f"W1.to_local() type: {type(self.w1.to_local())}")
+        # print(f"W1.to_local() dtype: {self.w1.to_local().dtype}")
         h = F.silu(torch._grouped_mm(x, self.w1, offs=offsets))
         h = h * torch._grouped_mm(x, self.w3, offs=offsets)
         out = torch._grouped_mm(h, self.w2, offs=offsets)
