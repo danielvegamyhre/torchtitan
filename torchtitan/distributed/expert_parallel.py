@@ -253,6 +253,16 @@ def expert_parallel(func: Callable) -> Callable:
         experts_per_ep_rank = w1.shape[0]
         num_ep_ranks = num_tokens_per_expert.shape[0] // experts_per_ep_rank
 
+        # Make sure max_len of permuted token indicies is divisible by TOKEN_GROUP_ALIGN_SIZE_M,
+        # by padding it to the nearest multiple of TOKEN_GROUP_ALIGN_SIZE_M.
+        ceil_div = lambda x, y: (x + y - 1) // y
+        padded_max_len = (
+            ceil_div(
+                x.shape[0] + experts_per_ep_rank * TOKEN_GROUP_ALIGN_SIZE_M,
+                TOKEN_GROUP_ALIGN_SIZE_M,
+            )
+            * TOKEN_GROUP_ALIGN_SIZE_M
+        )
         with torch.no_grad():
             (
                 permuted_indices,
@@ -262,7 +272,7 @@ def expert_parallel(func: Callable) -> Callable:
                 num_tokens_per_expert,
                 experts_per_ep_rank,
                 num_ep_ranks,
-                x.shape[0] + experts_per_ep_rank * TOKEN_GROUP_ALIGN_SIZE_M,
+                padded_max_len,
                 TOKEN_GROUP_ALIGN_SIZE_M,
             )
 
